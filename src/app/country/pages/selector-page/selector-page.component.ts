@@ -50,14 +50,19 @@ export class SelectorPageComponent implements OnInit {
 
   onCountryChanged(): void {
     this.myform.get('country')!.valueChanges
-    .pipe(
-      tap( () => this.myform.get('border')!.setValue('') ),
-      filter( (value: string) => value.length > 0 ),
-      switchMap( (alphaCode) => this.countryService.getCountryByAc(alphaCode) ),
-      switchMap( (country) => this.countryService.getCountryBordersByCodes( country.borders ) ),
-    )
-    .subscribe( countries => {
-      this.borders=countries;
-    });
+      .pipe(
+        tap(() => this.myform.get('border')!.setValue('')), // Limpiar fronteras al cambiar el país
+        filter((value: string) => value.length > 0), // Solo continuar si hay un valor
+        switchMap((alphaCode) => this.countryService.getCountryByAc(alphaCode)),
+        switchMap((response) => {
+          // Si la respuesta es un array, tomamos el primer país
+          const country = Array.isArray(response) ? response[0] : response;
+          return this.countryService.getCountryBordersByCodes(country.borders);
+        })
+      )
+      .subscribe(countries => {
+        this.borders = countries; // Actualizar las fronteras
+      });
   }
+  
 }
